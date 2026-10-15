@@ -16,7 +16,9 @@ on:
 
 permissions:
   contents: write   # crear el tag y la release
-  actions: read     # comprobar que la CI del commit está en verde
+  # No lo quites: con un bloque `permissions` explícito, lo que no se nombra queda en «ninguno»,
+  # y leer los estados del commit respondería 403.
+  statuses: read    # leer la constancia de la verificación local
 
 concurrency:
   group: release
@@ -29,12 +31,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          # El commit del dispatch, no «lo que haya en main»: la constancia de abajo se comprueba
+          # sobre $GITHUB_SHA y el tag se crea en HEAD, así que tienen que ser el mismo commit.
+          ref: ${{ github.sha }}
 
       - name: Validar
         id: v
         env:
           VERSION: ${{ inputs.version }}
-          GH_TOKEN: ${{ github.token }}
           RAMA: ${{ github.event.repository.default_branch }}
         run: |
           set -euo pipefail
@@ -50,11 +54,24 @@ jobs:
           RE="^## \[?v?${VERSION//./\\.}\]?([^0-9.]|$)" \
             awk 'BEGIN{re=ENVIRON["RE"]} $0 ~ re {f=1; next} f && /^## /{exit} f' CHANGELOG.md > notas.md
           grep -q '[^[:space:]]' notas.md || fallo "CHANGELOG.md no tiene la sección de $VERSION (fusiona antes el PR 'chore: release $tag')"
-          if [[ -f .github/workflows/ci.yml ]]; then
-            ci="$(gh run list --workflow ci.yml --commit "$GITHUB_SHA" --json conclusion -q '.[0].conclusion' || true)"
-            [[ $ci == success ]] || fallo "La CI de este commit no está en verde (${ci:-sin ejecución})"
-          fi
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      # La verificación (gitleaks, scripts/check.sh, árbol limpio) corre en la máquina de quien
+      # publica (`flujo publicar` → flujo verificar), no aquí. Lo que llega es su constancia, un
+      # estado sobre el commit. Se exige `success`: que no conste nada no es haber pasado.
+      # GitHub devuelve los estados del más reciente al más antiguo: el primero es el vigente.
+      - name: Verificado en local
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          estado="$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/statuses" \
+            -q '[.[] | select(.context == "metodologia/publicable")][0].state // ""')"
+          if [[ $estado != success ]]; then
+            echo "::error::$GITHUB_SHA no consta como verificado (metodologia/publicable: '${estado:-sin estado}'). Publica con flujo publicar, que lo verifica en local y deja la constancia."
+            exit 1
+          fi
+          echo "$GITHUB_SHA consta como verificado."
 
       - name: Tag y release
         env:

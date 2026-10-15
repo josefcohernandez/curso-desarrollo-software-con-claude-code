@@ -5,7 +5,7 @@
 
 Proceso: metodología común (`~/.claude/metodologia/METODOLOGIA.md`). Todo entra por PR desde un
 worktree (`flujo abrir <issue>`), con título `tipo: descripción` en español. Un refresco del curso
-es `docs(vX.Y): …` (no `refresh(vX.Y): …`, que la CI rechaza).
+es `docs(vX.Y): …` (no `refresh(vX.Y): …`, que `flujo cerrar` rechaza).
 
 ## Qué es
 
@@ -14,7 +14,8 @@ Es un submódulo del monorepo `cursos-libros-ia`, que lo usa para generar el lib
 
 ## Comandos
 
-- Verificación completa (la misma que la CI): `scripts/check.sh`
+- Verificación completa (la que corre `flujo cerrar` antes de fusionar; no hay CI en GitHub):
+  `scripts/check.sh`
 - Validar un módulo: `python3 test-modules.py --module 08` (número con dos cifras; `--verbose`
   para detalle)
 
@@ -33,6 +34,6 @@ Es un submódulo del monorepo `cursos-libros-ia`, que lo usa para generar el lib
 
 <!-- Una línea por ADR: - [0001 · Título](docs/adr/0001-titulo.md): resumen en una frase. -->
 
-- **Versiones = edición del curso.** Las releases `vX.Y.Z` (las crea la CI con `flujo publicar`)
+- **Versiones = edición del curso.** Las releases `vX.Y.Z` (las crea `release.yml` con `flujo publicar`)
   siguen la edición: mayor.menor = edición del README (ahora la 3.9), patch = correcciones sin
   edición nueva. La primera release será `v3.9.0`; una edición nueva sube la menor (o la mayor).

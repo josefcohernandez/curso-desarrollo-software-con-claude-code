@@ -8,6 +8,7 @@ Cada PR añade su línea en *Unreleased*; al publicar, *Unreleased* pasa a `## [
 ### Añadido
 - Metodología común: CI (`scripts/check.sh` con `test-modules.py` por módulo, gitleaks y título del PR), release por la CI, plantillas de PR e issue y hook `pre-push`.
 ### Cambiado
+- La verificación pasa a local (metodología v1.3.0): sin `ci.yml` ni `pr-titulo.yml`; `flujo cerrar` verifica cada PR y `release.yml` exige la constancia `metodologia/publicable`.
 ### Corregido
 ### Migraciones
 ### Variables nuevas
