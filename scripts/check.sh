@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Verificación completa del proyecto: lo mismo en local (antes de abrir el PR) y en CI.
+# Verificación completa del proyecto: la que corre `flujo cerrar` antes de fusionar y `flujo publicar`
+# antes de publicar (flujo verificar), en esta máquina; no hay CI en GitHub.
 # Tiene que acabar en error si algo falla. Necesita python3 con PyYAML.
 set -euo pipefail
 cd "$(dirname "$0")/.."
